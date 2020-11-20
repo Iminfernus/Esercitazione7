@@ -12,6 +12,8 @@
 #define NUM_MESS 0
 #define SPAZIO_DISP 1
 #define DIM 10
+#define ESEC 30
+
 
 struct prodcons
 {
@@ -20,7 +22,6 @@ struct prodcons
     int coda;
 
 };
-
 
 
 void Wait_Sem(int id_sem, int semnum)
@@ -50,17 +51,15 @@ void Signal_Sem(int id_sem, int semnum)
 
 void Produttore(struct prodcons *p, key_t id_sem){
 
-    int valore_prodotto = 5;
-    printf("Valore prodotto: %d", valore_prodotto);
+    int valore_prodotto = rand() % 10;
 
-    //valore_prodotto = rand() % 10;
+    printf("Valore prodotto: %d\n", valore_prodotto);
 
     Wait_Sem(id_sem, SPAZIO_DISP);
 
     p->buffer[p->testa] = valore_prodotto;
-    p->testa = ((p->testa) + 1) % 10;
+    p->testa = (++(p->testa)) % 10;
 
-   
 
     Signal_Sem(id_sem,NUM_MESS);
 
@@ -74,11 +73,10 @@ void Consumatore(struct prodcons *p, key_t id_sem){
 
     valore_letto = p->buffer[p->coda];
 
-    p->coda = ((p->coda) + 1) % 10;
+    p->coda = (++(p->coda)) % 10;
 
-    printf("Valore letto: %d", valore_letto);
+    printf("Valore letto: %d\n", valore_letto);
 
-    sleep(1);
 
     Signal_Sem(id_sem,SPAZIO_DISP);
 
@@ -116,8 +114,12 @@ int main() {
     semctl(id_sem, SPAZIO_DISP, SETVAL ,DIM);
     semctl(id_sem, NUM_MESS,SETVAL, 0);
 
+    struct prodcons * p;
 
-    struct prodcons *p = shmat(shm_k,NULL, 0);
+    p = (struct prodcons *) shmat(id_shm, NULL, 0);
+
+    p->testa = 0;
+    p->coda = 0;
 
 
     int pid = fork();
@@ -125,7 +127,14 @@ int main() {
     if (pid == 0)      //figlio consumatore
     {
         printf("Sono il figlio consumatore, PID: %d\n", getpid());
-        Consumatore(p,id_sem);
+
+        for (int i = 0; i < ESEC; i++)
+        {
+            Consumatore(p,id_sem);
+        }
+        
+        
+
         exit(0);
     }
     
@@ -134,7 +143,13 @@ int main() {
     if (pid2 == 0)     //figlio produttore
     {
         printf("Sono il figlio produttore, PID: %d\n", getpid());
-        Produttore(p,id_sem);
+
+        for (int i = 0; i < ESEC; i++)
+        {
+            Produttore(p,id_sem);
+        
+        }
+        
         exit(0);
     }
 
