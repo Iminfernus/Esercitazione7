@@ -89,7 +89,6 @@ void Consumatore(struct prodcons *p, key_t id_sem)
 
 void Pulisci(int id_shm, int id_sem)
 {
-
     shmctl(id_shm, IPC_RMID, 0);
     semctl(id_sem, NUM_MESS, IPC_RMID);
     semctl(id_sem, SPAZIO_DISP, IPC_RMID);
