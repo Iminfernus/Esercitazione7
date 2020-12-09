@@ -14,9 +14,9 @@
 #define SPAZIO_DISP 1
 #define MUTEX_C 2
 #define MUTEX_P 3
-#define DIM 10
+#define DIM 3
 #define ESEC 20
-#define NUM_PROD 5
+#define NUM_PROD 10
 #define NUM_CONS 10
 #define VUOTO 0
 #define PIENO 1
@@ -98,7 +98,7 @@ void Consumatore(struct prodcons *p, key_t id_sem)
 
     valore_letto = p->buffer[indice];
 
-    printf("Valore letto: %d\n", valore_letto);
+    printf("Valore letto: %d, PID: %d\n", valore_letto, getpid());
 
     p->stato[indice] = VUOTO;
 
@@ -117,8 +117,8 @@ void Pulisci(int id_shm, int id_sem)
 int main()
 {
 
-    key_t shm_k = ftok("./esempio", 'a');
-    key_t sem_k = ftok("./esempio", 'z');
+    key_t shm_k = ftok("./esempio_vetstato", 'a');
+    key_t sem_k = ftok("./esempio_vetstato", 'z');
 
     int id_shm = shmget(shm_k, sizeof(struct prodcons), IPC_CREAT | 0664);
 
@@ -153,9 +153,11 @@ int main()
         if (pid == 0) //figlio consumatore
         {
             printf("Sono il figlio consumatore, PID: %d\n", getpid());
+
                 
-                    Consumatore(p, id_sem);
-                
+            Consumatore(p, id_sem);
+            
+            printf("Termino, PID: %d\n", getpid());
 
             exit(0);
         }
@@ -171,9 +173,10 @@ int main()
 
             srand(getpid()*time(NULL));
             
-                Produttore(p, id_sem);
+            Produttore(p, id_sem);
             
             printf("Termino, PID: %d\n", getpid());
+            
             exit(0);
         }
     }
